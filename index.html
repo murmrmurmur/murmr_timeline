@@ -29,7 +29,9 @@
 }
 html,body{height:100%;background:var(--bg);color:var(--text)}
 body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',-apple-system,sans-serif;
-  display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  height:100vh;height:100dvh;
+  overflow:hidden;
   font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
@@ -51,7 +53,8 @@ main{flex:1;overflow:hidden;position:relative}
 .sc{display:none;height:100%;overflow-y:auto;padding:24px 20px 80px}
 .sc.on{display:block}
 .scf{display:none;flex-direction:column;overflow:hidden;
-  position:fixed;top:50px;left:0;right:0;bottom:0}
+  position:fixed;top:50px;left:0;right:0;bottom:0;
+  height:calc(100vh - 50px);height:calc(100dvh - 50px)}
 .scf.on{display:flex}
 
 .eyebrow{font-size:10px;font-weight:600;letter-spacing:.12em;color:var(--text3);margin-bottom:3px;text-transform:uppercase}
@@ -940,15 +943,15 @@ pullCloud().then(()=>{
   initPanelSwipe();
 });
 
-// Fix iOS frozen screen when app resumes from background
+// Fix iOS frozen/shifted screen when app resumes from background
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
-    // Force reflow to fix frozen viewport
-    document.body.style.display='none';
-    document.body.offsetHeight; // trigger reflow
-    document.body.style.display='';
+    // Force header and layout to stay visible
+    document.querySelector('header').style.display='none';
+    document.querySelector('header').offsetHeight;
+    document.querySelector('header').style.display='';
     // Re-render current screen
-    const cur=document.querySelector('.screen.on');
+    const cur=document.querySelector('.screen.on, .scf.on, .sc.on');
     if(cur){
       const id=cur.id.replace('sc-','');
       if(id==='calendar')renderCal();
@@ -957,10 +960,9 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 
-// Also handle resize (orientation change etc)
 window.addEventListener('resize',()=>{
-  const cur=document.querySelector('.screen.on');
-  if(cur&&cur.id==='sc-calendar')renderCal();
+  const cur=document.querySelector('.scf.on');
+  if(cur)renderCal();
 });
 </script>
 </body>
