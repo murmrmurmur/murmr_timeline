@@ -939,6 +939,29 @@ pullCloud().then(()=>{
   document.getElementById('fab').style.display='none';
   initPanelSwipe();
 });
+
+// Fix iOS frozen screen when app resumes from background
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    // Force reflow to fix frozen viewport
+    document.body.style.display='none';
+    document.body.offsetHeight; // trigger reflow
+    document.body.style.display='';
+    // Re-render current screen
+    const cur=document.querySelector('.screen.on');
+    if(cur){
+      const id=cur.id.replace('sc-','');
+      if(id==='calendar')renderCal();
+      else if(id==='timeline')renderTL();
+    }
+  }
+});
+
+// Also handle resize (orientation change etc)
+window.addEventListener('resize',()=>{
+  const cur=document.querySelector('.screen.on');
+  if(cur&&cur.id==='sc-calendar')renderCal();
+});
 </script>
 </body>
 </html>
