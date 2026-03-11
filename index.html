@@ -352,7 +352,7 @@ main{flex:1;overflow:hidden;position:relative}
       <div class="tp-add">
         <input class="tp-inp" id="tp-inp" placeholder="할일을 입력하고 Enter..."
           onkeydown="if(event.key==='Enter')addTodo()"/>
-        <select class="tp-sel" id="tp-tag">
+        <select class="tp-sel" id="tp-tag" onchange="updateTagSelColor(this)">
           <option value="dev">● 개발</option>
           <option value="mkt">● 마케팅</option>
           <option value="adm">● 행정</option>
@@ -736,6 +736,8 @@ function showPanel(dk,day){
   renderTpList(dk);
   document.getElementById('todo-panel').classList.add('open');
   setTimeout(()=>document.getElementById('tp-inp')?.focus(),120);
+  const sel=document.getElementById('tp-tag');
+  if(sel)updateTagSelColor(sel);
 }
 function closePanel(clr=true){
   document.getElementById('todo-panel').classList.remove('open');
@@ -813,13 +815,14 @@ function initPanelSwipe(){
 }
 function renderTpList(dk){
   const el=document.getElementById('tp-list');
-  // cleanup previous drag listeners
   if(el._cleanup)el._cleanup();
   const tasks=S.tasks[dk]||[];
   if(!tasks.length){
     el.innerHTML='<div class="tp-empty">할일이 없어요<br><span style="font-size:11px;color:var(--text4)">아래에서 추가해보세요</span></div>';return;
   }
-  el.innerHTML=tasks.map(t=>{
+  // done items go to bottom
+  const sorted=[...tasks.filter(t=>!t.done),...tasks.filter(t=>t.done)];
+  el.innerHTML=sorted.map(t=>{
     const tag=TAGS[t.tag]||TAGS.etc;
     const bs=t.tag==='dev'?'background:var(--dev-bg);color:var(--dev)'
       :t.tag==='mkt'?'background:var(--green-bg);color:var(--green)'
@@ -909,9 +912,11 @@ function initTodoSort(dk){
     getItems().forEach(it=>it.classList.remove('drag-over'));
 
     if(curIdx!==startIdx){
-      const arr=[...(S.tasks[dk]||[])];
-      const [moved]=arr.splice(startIdx,1);
-      arr.splice(curIdx,0,moved);
+      const tasks=S.tasks[dk]||[];
+      const sorted=[...tasks.filter(t=>!t.done),...tasks.filter(t=>t.done)];
+      const [moved]=sorted.splice(startIdx,1);
+      sorted.splice(curIdx,0,moved);
+      S.tasks[dk]=sorted;
       S.tasks[dk]=arr;
       persist();
     }
@@ -987,6 +992,21 @@ function addTodo(){
   if(!S.tasks[S.activeDate])S.tasks[S.activeDate]=[];
   S.tasks[S.activeDate].push({id:Date.now(),text,tag,done:false});
   inp.value='';persist();renderTpList(S.activeDate);renderCal();inp.focus();
+}
+
+function updateTagSelColor(sel){
+  const colors={
+    dev:'background:#F5F0FF;color:#7C3AED',
+    mkt:'background:#E8F5EE;color:#1A7A3C',
+    adm:'background:#FFF3E0;color:#E65100',
+    etc:'background:var(--gray-bg);color:var(--gray)'
+  };
+  const c=colors[sel.value]||colors.etc;
+  sel.style.cssText=c.replace('background:','background-color:').replace(';color:',';color:');
+  // apply directly
+  const parts=c.split(';');
+  sel.style.backgroundColor=parts[0].replace('background:','').trim();
+  sel.style.color=parts[1].replace('color:','').trim();
 }
 
 /* ── NOTES ── */
